@@ -28,7 +28,20 @@ _G.AlerterProbe = P
 --------------------------------------------------------------------------------
 local NPC     = COMBATLOG_OBJECT_TYPE_NPC       or 0x00000800
 local HOSTILE = COMBATLOG_OBJECT_REACTION_HOSTILE or 0x00000040
-local band    = bit.band
+-- Robust bitwise AND: prefer the classic `bit` lib, fall back to bit32 or a pure
+-- Lua implementation so a missing library can never silently break the filter.
+local band = (bit and bit.band) or (bit32 and bit32.band) or function(a, b)
+    local r, m = 0, 1
+    while a > 0 and b > 0 do
+        if a % 2 == 1 and b % 2 == 1 then r = r + m end
+        a, b, m = math.floor(a / 2), math.floor(b / 2), m * 2
+    end
+    return r
+end
+
+-- Diagnostic counters (surfaced in the window header) so we can see exactly where
+-- events are dropping: total CLEU seen -> cast events -> hostile-NPC filtered.
+local diag = { cleu = 0, cast = 0, npc = 0, err = nil }
 
 local issecret = issecretvalue or issecret
 local function IsSecret(v)
@@ -151,10 +164,13 @@ end
 local WATCH = { SPELL_CAST_START = "START", SPELL_CAST_SUCCESS = "SUCC" }
 
 local function OnCombatLog()
+    diag.cleu = diag.cleu + 1
     local t, sub, _, sguid, sname, sflags, _, dguid, dname, dflags = CombatLogGetCurrentEventInfo()
     local tag = WATCH[sub]
     if not tag then return end
+    diag.cast = diag.cast + 1
     if not (sflags and band(sflags, NPC) > 0 and band(sflags, HOSTILE) > 0) then return end
+    diag.npc = diag.npc + 1
 
     local spellId, spellName = select(12, CombatLogGetCurrentEventInfo())
 
@@ -264,13 +280,14 @@ local function Refresh()
     end
     for i = 1, LINES do lines[i]:SetText(shown[i] or "") end
     headFS:SetText(string.format(
-        "%scaptured %d%s   %s%.0f/s%s   %sshown:%s%s   %s%s   %s",
+        "%scaptured %d%s  %s%.0f/s%s  %sshown:%s%s  %s  %s%s  %scleu:%d cast:%d npc:%d%s%s",
         COL.accent, total, R,
         COL.dim, #rate, R,
         COL.grey, R, (filterTargeted and (COL.party .. "targeted-only" .. R) or "all"),
         frozen and (COL.warn .. "FROZEN" .. R) or "",
-        InCombatLockdown() and (COL.dim .. "in-combat" .. R) or (COL.grey .. "ooc" .. R),
-        ""
+        InCombatLockdown() and (COL.dim .. "in-combat" .. R) or (COL.grey .. "ooc" .. R), "",
+        COL.dim, diag.cleu, diag.cast, diag.npc, R,
+        diag.err and ("  " .. COL.me .. "ERR:" .. diag.err:sub(1, 60) .. R) or ""
     ))
 end
 
@@ -393,7 +410,13 @@ ev:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 ev:SetScript("OnEvent", function(_, event, arg1)
     if event == "COMBAT_LOG_EVENT_UNFILTERED" then
         local ok, err = pcall(OnCombatLog)
-        if not ok then geterrorhandler()(err) end
+        if not ok then
+            diag.err = tostring(err)
+            if not P._errShown then
+                P._errShown = true
+                pr("|cffe0685aCLEU handler error:|r " .. diag.err)
+            end
+        end
     elseif event == "NAME_PLATE_UNIT_ADDED" then
         OnPlateAdded(arg1)
     elseif event == "NAME_PLATE_UNIT_REMOVED" then
@@ -405,6 +428,9 @@ ev:SetScript("OnEvent", function(_, event, arg1)
         -- start each session fresh; the SV is only so a mid-session /reload keeps data
         rows = {}; total = 0
         pr("loaded. |cffffffff/aprobe|r to open. Enable enemy nameplates for interrupt + target reads.")
+        pr(("diag: band=%s NPC=0x%x HOSTILE=0x%x issecret=%s")
+            :format((bit and bit.band) and "bit" or (bit32 and "bit32" or "purelua"),
+                    NPC, HOSTILE, issecret and "yes" or "no"))
     end
 end)
 

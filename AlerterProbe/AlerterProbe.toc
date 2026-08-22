@@ -1,0 +1,9 @@
+## Interface: 120100
+## Title: |cff0cd29fAlerter|r Probe
+## Notes: Throwaway capability probe. Logs enemy (trash) casts + target/interrupt/secret fields for verification.
+## Author: Twies23
+## Version: 0.1.0
+## IconTexture: Interface\Icons\ability_creature_poison_05
+## SavedVariables: AlerterProbeDB
+
+Probe.lua

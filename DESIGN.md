@@ -13,6 +13,23 @@ feel like one family.
 
 ---
 
+## 0. Status — this is a WISHLIST
+
+**Nothing in this document is verified against live 12.1 yet.** It describes the
+addon we *want*, and the capabilities we'd *need* to build it — not what we've
+confirmed an addon can actually observe. Secret values, combat-log behavior
+inside instances, nameplate access, and whether any built-in boss-mod API exists
+are all **unproven**.
+
+Read every "we detect / we read / we know" below as "we wish to, pending
+verification." The capabilities this design leans on are tracked, with test
+methods and results, in **[CAPABILITIES.md](CAPABILITIES.md)**. We prove those
+first (a probe in-game), *then* commit to the parts of this wishlist the results
+actually support. Where a capability fails testing, the design section that
+depends on it changes — this doc is expected to move.
+
+---
+
 ## 1. The real problem
 
 It is tempting to frame this as a detection problem. It isn't.

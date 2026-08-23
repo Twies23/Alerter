@@ -75,6 +75,24 @@ available. Everything starts ⬜. We fill this in from a probe run in-game
 
 ---
 
+## H. Midnight computation restrictions (raised by RESEARCH.md finding #2)
+
+Midnight's API changes reportedly target client-side *computation and
+information manipulation*, not only what's readable — the reason WeakAuras
+ceased development. Our relevance model lives on exactly this surface, so we must
+verify what logic is permitted, not just what values we can read.
+
+| # | Capability we need | Concern | Design depends on it | Status | Notes / result |
+|---|---|---|---|---|---|
+| H1 | Branch/filter on a read cast/aura value in combat | secret values taint comparisons; tainted results may be unusable | the whole relevance model (role×spec×capability) | ⬜ | test: does `if interruptible then show end` work in combat, or does the taint block it? |
+| H2 | Compare a unit GUID to party/self to route "On me" | may be permitted (identity, not secret) | targeted alerts | ⬜ | likely OK; confirm |
+| H3 | Read my own spell cooldown/usable to gate "Stop it" | own-data reads are usually allowed | capability filter | ⬜ | |
+| H4 | Drive a visible display from a computed decision | Blizzard "left room" for visual customization | Display layer | ⬜ | where the design retreats to if H1 fails |
+
+If **H1 ❌**, the relevance model can't compute freely in combat → pivot to
+display-side customization (explicitly permitted) plus boss-mod-sourced timing,
+and lean on promotion as static config rather than live filtering.
+
 ## Test protocol
 
 Verification happens in three escalating settings; capture with the probe

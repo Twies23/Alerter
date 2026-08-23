@@ -194,17 +194,40 @@ Source = {
 
 Planned implementations, **in confidence order**:
 
-1. **BigWigs** — has a real, documented message bus (`BigWigs_StartBar`, …).
-   Lowest-risk source; build first.
-2. **Blizzard built-in boss mod** — *only if it exposes a public, hookable API.*
-   This is unverified (§7). If it's UI-only, this source is deferred or dropped.
+1. **BigWigs** — real, documented message bus. Lowest-risk source; build first.
+   Confirmed present in 12.1 (CAPABILITIES E1). Contract, verified against the
+   M33kAuras/WeakAuras `BossMods.lua` bridge:
+   - register: `BigWigsLoader.RegisterMessage(addon, event, cb)`
+   - timers: `BigWigs_Timer`, `BigWigs_CastTimer`, `BigWigs_TargetTimer`
+     (per-cast / per-*target* — feeds "On me" / "Stop it" on bosses),
+     `BigWigs_StartBar` / `StopBar` / `PauseBar` / `ResumeBar`
+   - flow: `BigWigs_StartPull`, `BigWigs_Message`, `BigWigs_SetStage`,
+     `BigWigs_OnBossWipe` / `OnBossWin`, `BigWigs_StopBars`
+   - stage/colors: `BigWigs:IterateBossModules()`, `BigWigs:GetPlugin("Colors")`
+2. **DBM** — same role, different bus (`DBM_TimerBegin`, `DBM_Announce`,
+   `DBM_SetStage`, `DBM:GetStage()`). Second implementation, same interface.
+3. **Blizzard built-in boss mod** — **not viable in 12.1.** No public API exists
+   (CAPABILITIES E2: `C_EncounterInfo` nil, no boss-mod namespace). Even the
+   M33kAuras WeakAuras fork relies entirely on BigWigs/DBM. Dropped unless
+   Blizzard ships an API later.
+
+**Normalized vocabulary.** Rather than invent our own, we adopt the de-facto
+standard the WeakAuras ecosystem already uses: each source translates its native
+events into a `BossMod_*` family — `TimerStart / TimerStop / TimerPause /
+TimerResume / TimerUpdate / Announce / SetStage`. Downstream consumes only these.
+
+**Authored timelines.** `TimelineParser.lua` in M33kAuras shows a data-driven
+alternative to a live boss mod: bars keyed by `eventID`/`spellID` with
+`duration / expirationTime / count / stage`, played back from pre-authored
+timings. This is the shape our **Timeline** intent (and any future authored-cast
+data) should take — usable when no boss mod is present, or for M+ trash timings.
 
 More than one source may run at once; every event keeps its `source` tag so the
 debug window can diff them (do timings agree? does one miss a pull?). That
 comparison is a *diagnostic*, not a core feature we over-invest in.
 
-> Note: this reorders the earlier plan. Blizzard-first was an assumption; until
-> its API is confirmed, BigWigs is the safer first target.
+> Note: this reorders the original plan. Blizzard-first was an assumption; it's
+> now confirmed non-viable, and BigWigs is the primary boss source.
 
 ---
 

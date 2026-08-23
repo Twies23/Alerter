@@ -53,7 +53,7 @@ available. Everything starts ⬜. We fill this in from a probe run in-game
 
 | # | Capability we need | API we'd use | Design depends on it | Status | Notes / result |
 |---|---|---|---|---|---|
-| E1 | BigWigs is present & its message bus fires | `BigWigs` global / `RegisterMessage("BigWigs_StartBar")` | boss source #1 | ✅ | `BigWigs`, `BigWigsLoader`, `IsAddOnLoaded("BigWigs")` all present (probe, Kings' Rest). Message-bus fire still to confirm on a pull. |
+| E1 | BigWigs is present & its message bus fires | `BigWigsLoader.RegisterMessage(addon, event, cb)` | boss source #1 | ✅ | Present (probe, Kings' Rest). Full message contract confirmed from M33kAuras `BossMods.lua`: `BigWigs_Timer/CastTimer/TargetTimer`, `BigWigs_StartBar/StopBar/PauseBar/ResumeBar`, `BigWigs_StartPull/Message/SetStage/OnBossWipe/OnBossWin`; `BigWigs:IterateBossModules()`, `GetPlugin("Colors")`. Live fire still to confirm on a pull. |
 | E2 | A **public Blizzard boss-mod API** exists | probe `C_*` globals (`C_EncounterInfo`?, boss-mod namespace) | boss source #2 (else dropped) | ❌ | `C_EncounterInfo` nil; **no** `*BossMod*`/`*EncounterMod*`/`C_BossMod` global found. No discoverable public built-in boss-mod API by name → boss source #2 deferred; BigWigs is the boss source. |
 | E3 | `ENCOUNTER_START/END`, `BOSS_KILL` fire | events | pull/wipe framing | ⬜ | not yet tested (no boss pulled during probe) |
 | E4 | Read encounter timeline from Encounter Journal | `EJ_*` / `C_EncounterJournal` | timeline without a boss mod | ⚠️ | `C_EncounterJournal` present, but it's static journal data, not live timings. Not a boss-timer source on its own. |

@@ -23,10 +23,11 @@ landscape. Reference only — Alerter is not bound to any of these (see DESIGN �
    functionality, due to all of the new addon restrictions."**
 2. **Midnight restricts computation, not just reads.** Blizzard "has since eased
    up on some of those restrictions, allowing more information to be
-   manipulated, though focusing more on visual customization, while still
-   keeping full control and computation [restricted]." → The clampdown targets
-   *client-side computation and information manipulation*, exactly the surface
-   our relevance model lives on.
+   manipulated, though focusing more on visual customization, **while still
+   keeping full control and computation firmly in the past**." → The concession
+   was *visual customization only*; computation-heavy addons appear to be gone by
+   design. That is exactly the surface our relevance model lives on — treat it as
+   a hard constraint, not a temporary restriction.
 3. **Packs depend on a boss mod for encounter timers.** "Users will still need
    to ensure they also have their favorite boss mod installed … since these
    auras rely on their encounter timer information." Confirms E1 (BigWigs/DBM is

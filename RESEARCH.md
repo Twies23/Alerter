@@ -39,6 +39,17 @@ landscape. Reference only — Alerter is not bound to any of these (see DESIGN �
    "the encounters just didn't need them as much as WeakAuras of the past."
    Comparable to Northern Sky Raid Tools, DBM, BigWigs.
 
+## Yukero pack — confirmed specifics (from the wago page)
+
+- Version `v1.0.11`, `[12.1.0 - Midnight]`, 39 stars — current, modest adoption.
+- **Reuses Causese's sound library.** Requires **both** `SharedMedia_Causese`
+  *and* `yukero-shared-media` for "the full sound experience." → Causese's voice
+  cues are the community-standard dungeon-alert sound set; matching those LSM
+  sound names would make Alerter instantly familiar.
+- **Hard deps:** BigWigs *or* DBM (boss timer data) + the M33kAuras engine.
+- **Customization model:** an "Anchors folder" of movable icons/bars the user
+  drags to fit their UI. Anchor-based positioning is the expected baseline.
+
 ## Implications for Alerter
 
 - **Opportunity.** WeakAuras is dead and its forks are limited/janky. A lean,

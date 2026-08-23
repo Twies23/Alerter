@@ -50,6 +50,41 @@ landscape. Reference only — Alerter is not bound to any of these (see DESIGN �
 - **Customization model:** an "Anchors folder" of movable icons/bars the user
   drags to fit their UI. Anchor-based positioning is the expected baseline.
 
+## Decoded Yukero pack — detection breakdown (GROUND TRUTH)
+
+Decoded the full `!WA:2!` export (281 auras, "Dungeon Pack", Season 2 Midnight;
+organized per-dungeon with `[Anchor]` movers for Text/Bar/Frontals/Circles). How
+it actually detects things, counted across all triggers:
+
+| Mechanism | Count | Detail |
+|---|---|---|
+| **Boss Mod Timer + Announce** (`addons`) | **203** | BigWigs/DBM events — the backbone |
+| **Aura** (`aura2`, UNIT_AURA) | **86** | unit = **player 80** / arena 6; **HELPFUL 83**, HARMFUL 3 |
+| Cooldown Progress (`spell`) | ~5 | Bloodlust/CD reminders |
+| Cast / Combat Events / custom | ~4 | custom triggers are thin spellID filters over Boss Mod Announce |
+| **Enemy combat-log SPELL_CAST scraping** | **0** | none at all |
+
+**This is the headline result of all the research.** A currently-shipping,
+working Midnight pack does its detection with only two real sources:
+1. **BigWigs/DBM boss-mod timers & announces** (for boss/timed mechanics), and
+2. **auras on the player** (mostly HELPFUL markers the game applies to targeted
+   players), read via `UNIT_AURA`.
+
+It does **no** combat-log enemy-cast detection. The authors — who know Midnight's
+API limits first-hand — simply don't go there. This strongly corroborates the
+computation-clampdown risk (finding #2 / CAPABILITIES §H).
+
+### Course-corrections for Alerter
+- **"On me / targeted" = player auras, not cast scraping.** Promote hypothesis B4
+  (targeted mechanics surface as a debuff/marker on the player) from fallback to
+  the *primary* path; read via `UNIT_AURA` on player/party.
+- **Boss/timed mechanics = BigWigs/DBM**, as already designed (§6).
+- **Reassess the probe's premise.** AlerterProbe was built to test combat-log
+  trash-cast detection (the `captured 0` bug). That is *not* the proven route on
+  12.1. Treat combat-log cast detection as an optional experiment / possible gap
+  to fill — not the foundation. The detection model should center on BossMod
+  events + player/party auras.
+
 ## Implications for Alerter
 
 - **Opportunity.** WeakAuras is dead and its forks are limited/janky. A lean,
